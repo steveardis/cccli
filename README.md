@@ -55,3 +55,7 @@ test/test-unit.sh    # script options and prompts, with a fake claude (no model 
 test/test-shell.sh   # Run? [Y/e/n] in zsh and bash terminals, with a fake claude
 test/test-live.sh    # end-to-end with the real model (uses your Claude Code account)
 ```
+
+## License
+
+MIT. See `LICENSE`.
