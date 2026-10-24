@@ -19,6 +19,14 @@ cccli -m opus "explain the error in build.log"
 
   Without the shell integration, `cccli -c` prints the command only.
 
+  Example:
+
+  ```
+  ❯ cccli -c "what VPCs are in AWS"
+  $ aws ec2 describe-vpcs --query 'Vpcs[].[VpcId,CidrBlock,IsDefault,Tags[?Key==`Name`]|[0].Value]' --output table
+  Run? [Y/e/n]
+  ```
+
 ## Options
 
 | Option | Meaning |
