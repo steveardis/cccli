@@ -65,7 +65,12 @@ fi
 prompt="$*"
 if [[ -t 0 ]]; then
   exec claude "${args[@]}" -- "$prompt" </dev/null
-else
-  # Piped input: claude -p appends stdin to the prompt.
-  exec claude "${args[@]}" -- "$prompt"
 fi
+
+# Piped input: claude -p appends stdin to the prompt, but it waits only a few
+# seconds for the first data. Read all input first, so slow commands (and
+# another cccli) can feed cccli.
+input=$(mktemp "${TMPDIR:-/tmp}/cccli.XXXXXX")
+trap 'rm -f "$input"' EXIT
+cat > "$input"
+claude "${args[@]}" -- "$prompt" < "$input"

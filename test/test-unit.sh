@@ -5,7 +5,14 @@ set -u
 here=$(cd "$(dirname "$0")" && pwd)
 cccli="$here/../cccli"
 stub=$(mktemp -d); trap 'rm -rf "$stub"' EXIT
-printf '#!/bin/sh\nprintf "%%s\\n" "$@"\n' > "$stub/claude"
+# Like the real claude, the fake waits only a short time for piped input.
+cat > "$stub/claude" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n' "$@"
+if [[ ! -t 0 ]]; then
+  if IFS= read -r -t 1 line; then echo "stdin: $line"; else echo "NO-STDIN"; fi
+fi
+STUB
 printf '#!/bin/sh\necho "${FAKE_UNAME:-Darwin}"\n' > "$stub/uname"
 chmod +x "$stub/claude" "$stub/uname"
 export PATH="$stub:$PATH"; unset CCCLI_MODEL
@@ -29,4 +36,8 @@ check "-c with zsh says zsh"            '[[ $out == *"one command for zsh"* ]]'
 out=$(run -h); rc=$?;                   check "-h prints usage, exit 0"      '[[ $rc -eq 0 && $out == *usage* ]]'
 out=$(run -x "hi"); rc=$?;              check "unknown flag exits 2"         '[[ $rc -eq 2 ]]'
 out=$(run); rc=$?;                      check "no request exits 2"           '[[ $rc -eq 2 ]]'
+out=$( (sleep 2; echo late-input) | "$cccli" "hi" 2>&1)
+check "waits for slow piped input"      '[[ $out == *"stdin: late-input"* ]]'
+out=$(printf 'fast-input\n' | "$cccli" "hi" 2>&1)
+check "passes fast piped input"         '[[ $out == *"stdin: fast-input"* ]]'
 exit $fail

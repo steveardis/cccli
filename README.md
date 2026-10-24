@@ -27,6 +27,45 @@ cccli -m opus "explain the error in build.log"
   Run? [Y/e/n]
   ```
 
+## Pipe examples
+
+`cccli` reads piped input to the end before it calls Claude, so slow commands can feed it.
+
+Explain the output of a command:
+
+```sh
+make 2>&1 | cccli "why did this build fail?"                   # 2>&1 sends errors too
+diff old.conf new.conf | cccli "explain these changes"
+man tar | cccli "how do I extract one file from an archive?"
+aws ec2 describe-instances | cccli "which instances are stopped?"
+kubectl logs deploy/api --since=1h | cccli "group the errors by cause"
+```
+
+Write text from your work:
+
+```sh
+git diff --staged | cccli "write a commit message for this diff"
+git log --since=1.week --oneline | cccli "summarize this week's work"
+diff <(git show main:config.yaml) config.yaml | cccli "is this change safe?"
+```
+
+Chain calls, and send the result to a file or the clipboard:
+
+```sh
+tail -500 app.log | cccli "find the errors and their cause" | cccli "write a Jira title and description for this problem"
+pbpaste | cccli "rewrite this as a bullet list" | pbcopy        # macOS clipboard
+cccli "list the TODO comments in this repository" > todo.md
+```
+
+Give piped details to command mode (`-c`):
+
+```sh
+ls *.log | cccli -c "compress each of these files"
+git branch --merged main | cccli -c "delete these branches, except main"
+```
+
+Piped input counts toward your Claude usage. For a large log, send only the part you need, for example with `tail -500` or `grep ERROR`.
+
 ## Options
 
 | Option | Meaning |
