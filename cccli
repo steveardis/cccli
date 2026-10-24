@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# cccli - send a request (and optional piped input) to Claude Code.
+#
+# Answer mode (default): Claude answers. It can read files and run read-only
+# shell commands in the current directory. Any other tool call is denied.
+#   cat somefile.txt | cccli "summarize this"
+#   cccli "show the files in the current directory as a tree with directory sizes"
+#
+# Command mode (-c): Claude prints one shell command for your OS and shell, and
+# runs nothing. Source cccli.sh in your shell to confirm and run that command.
+#   cccli -c "find files over 100MB here"
+#
+# Model: -m MODEL, else $CCCLI_MODEL, else sonnet.
+# Requires Claude Code (`claude`) on PATH and signed in. Works on macOS and Linux.
+
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+usage: [command |] cccli [-c] [-m MODEL] "request"
+  -c        print one shell command for the request; run nothing
+  -m MODEL  model alias or ID, for example sonnet, opus, haiku (default: $CCCLI_MODEL or sonnet)
+  -h        show this help
+USAGE
+}
+
+mode=answer
+model="${CCCLI_MODEL:-sonnet}"
+while getopts ":cm:h" opt; do
+  case $opt in
+    c) mode=command ;;
+    m) model=$OPTARG ;;
+    h) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+done
+shift $((OPTIND - 1))
+[[ $# -eq 0 ]] && { usage >&2; exit 2; }
+
+args=(-p --model "$model")
+
+if [[ "$mode" == command ]]; then
+  case $(uname -s) in
+    Darwin) os="macOS (BSD tools, not GNU)" ;;
+    Linux)  os="Linux (GNU tools)" ;;
+    *)      os=$(uname -s) ;;
+  esac
+  shell=$(basename "${SHELL:-sh}")
+  system="You turn a request into exactly one command for $shell on $os.
+The working directory is: $PWD
+Reply with the command only, on a single line: no explanation, no markdown, no backticks, no leading \$.
+Join several steps with && or pipes. If input is included after the request, use it as context
+(for example, file names to act on). If the request cannot be done with a shell command,
+reply with: echo 'cccli: <short reason>'"
+  # No tools, no MCP servers: one fast model reply.
+  args+=(--tools "" --strict-mcp-config --system-prompt "$system")
+else
+  args+=(--allowedTools
+    Read Glob Grep
+    "Bash(ls:*)" "Bash(tree:*)" "Bash(du:*)" "Bash(find:*)" "Bash(wc:*)"
+    "Bash(cat:*)" "Bash(head:*)" "Bash(tail:*)" "Bash(file:*)" "Bash(stat:*)"
+    "Bash(sort:*)" "Bash(git status:*)" "Bash(git log:*)" "Bash(git diff:*)")
+fi
+
+prompt="$*"
+if [[ -t 0 ]]; then
+  exec claude "${args[@]}" -- "$prompt" </dev/null
+else
+  # Piped input: claude -p appends stdin to the prompt.
+  exec claude "${args[@]}" -- "$prompt"
+fi
