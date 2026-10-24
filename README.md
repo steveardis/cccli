@@ -31,21 +31,21 @@ cccli -m opus "explain the error in build.log"
 
 `cccli` reads piped input to the end before it calls Claude, so slow commands can feed it.
 
+A pipe helps in 3 cases:
+
+- **Claude cannot run the command.** In answer mode, Claude runs only read-only commands such as `ls`, `cat`, and `git log`. Run `aws`, `kubectl`, `make`, or `curl` yourself and pipe the output. Claude reads the output but cannot change anything.
+- **You choose what Claude sees.** `tail` and `grep` give Claude only the part you need. One model call is faster and uses less than Claude searching by itself.
+- **The data is not in a file**, for example the clipboard, another machine, or another `cccli` call.
+
+If Claude must look around (read a test, then the code, then the config), do not pipe. Ask Claude directly, for example `cccli "why does test_login fail?"`. A pipe gives Claude only one fixed snapshot. Also do not pipe what Claude can read itself: `cccli "write a commit message for the staged changes"` works without `git diff --staged |`.
+
 Explain the output of a command:
 
 ```sh
 make 2>&1 | cccli "why did this build fail?"                   # 2>&1 sends errors too
-diff old.conf new.conf | cccli "explain these changes"
-man tar | cccli "how do I extract one file from an archive?"
 aws ec2 describe-instances | cccli "which instances are stopped?"
 kubectl logs deploy/api --since=1h | cccli "group the errors by cause"
-```
-
-Write text from your work:
-
-```sh
-git diff --staged | cccli "write a commit message for this diff"
-git log --since=1.week --oneline | cccli "summarize this week's work"
+ssh web1 'journalctl -u nginx -n 200' | cccli "what went wrong?"
 diff <(git show main:config.yaml) config.yaml | cccli "is this change safe?"
 ```
 
