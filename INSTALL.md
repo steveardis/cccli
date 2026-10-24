@@ -1,5 +1,7 @@
 # Install cccli (instructions for Claude Code)
 
+To use these steps, tell Claude Code: "Install cccli from https://github.com/steveardis/cccli by following its INSTALL.md."
+
 These steps install `cccli` for the current user. They are written for Claude Code to follow. A person can follow them too. The steps are safe to run again: each step checks first and does not add duplicates.
 
 Tell the user what each step changes before you change their shell startup file.
@@ -9,15 +11,16 @@ Tell the user what each step changes before you change their shell startup file.
 1. Run `claude --version`. If the command is not found, stop and tell the user to install Claude Code and sign in first.
 2. Run `uname -s`. Continue only on `Darwin` (macOS) or `Linux`.
 3. Find the user's interactive shell with `basename "$SHELL"`. Continue only for `zsh` or `bash`.
-4. Run `perl -v` and `script --help 2>&1 | head -1`. The shell tests in step 5 need both commands. If either is missing, skip `test/test-shell.sh` in step 5 and tell the user.
+4. Run `git --version`. If the command is not found, stop and tell the user to install git first.
+5. Run `perl -v` and `script --help 2>&1 | head -1`. The shell tests in step 5 need both commands. If either is missing, skip `test/test-shell.sh` in step 5 and tell the user.
 
-## 2. Copy the files
+## 2. Get the files
 
-The install directory is `~/.local/share/cccli`.
+The install directory is `~/.local/share/cccli`. It is a clone of https://github.com/steveardis/cccli, so `git pull` in that directory gets updates.
 
-1. If `~/.local/share/cccli` exists and it is not this folder, show the user what is in it and ask before you replace it.
-2. Copy these files and keep the folder layout: `cccli`, `cccli.sh`, `README.md`, `INSTALL.md`, and `test/`.
-3. Make the scripts executable: `chmod +x ~/.local/share/cccli/cccli ~/.local/share/cccli/test/*.sh`.
+1. If `~/.local/share/cccli` does not exist, run `git clone https://github.com/steveardis/cccli.git ~/.local/share/cccli`.
+2. If `~/.local/share/cccli` is already a clone of that repository, run `git -C ~/.local/share/cccli pull --ff-only`.
+3. If `~/.local/share/cccli` exists and is not a clone of that repository, show the user what is in it and ask before you replace it.
 
 ## 3. Put `cccli` on the PATH
 

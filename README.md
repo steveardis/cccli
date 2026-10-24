@@ -39,11 +39,18 @@ The model is `-m`, else `$CCCLI_MODEL`, else `sonnet`.
 
 ## Install
 
-To let Claude Code install `cccli`, point Claude Code at this folder (or the ZIP file) and ask it to follow `INSTALL.md`. To install by hand, follow these steps.
+To let Claude Code install `cccli`, tell Claude Code:
 
-Requirements: [Claude Code](https://claude.com/claude-code) (`claude`) on your `PATH` and signed in, bash 3.2 or later, and zsh or bash as your interactive shell.
+> Install cccli from https://github.com/steveardis/cccli by following its INSTALL.md.
 
-1. Copy this folder, for example to `~/.local/share/cccli`.
+To install by hand, follow these steps.
+
+Requirements: [Claude Code](https://claude.com/claude-code) (`claude`) on your `PATH` and signed in, git, bash 3.2 or later, and zsh or bash as your interactive shell.
+
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/steveardis/cccli.git ~/.local/share/cccli
+   ```
 2. Link the script into a directory on your `PATH`:
    ```sh
    ln -s ~/.local/share/cccli/cccli ~/.local/bin/cccli
@@ -53,6 +60,8 @@ Requirements: [Claude Code](https://claude.com/claude-code) (`claude`) on your `
    source ~/.local/share/cccli/cccli.sh
    ```
 4. Open a new terminal.
+
+To update, run `git -C ~/.local/share/cccli pull`.
 
 Read the command before you press Enter. In command mode, Enter runs any command that Claude builds, including commands that delete files.
 
